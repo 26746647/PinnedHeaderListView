@@ -18,13 +18,13 @@ import za.co.immedia.pinnedheaderlistview.PinnedHeaderListView.OnItemClickListen
 
 public class MainActivity extends Activity {
 	
-	
+	//分组标题list
 	private ArrayList stringtitle=new ArrayList<String>();
-	
+	//所有数据的list
 	private ArrayList stringitem = new ArrayList<String>();
-	
+	//每个分组的count总数   key为 分组标题  value为该分组的总数
 	private HashMap titleitemcount = new HashMap<String, Integer>();
-	
+	// 分组所在索引位置     key为 分组标题  value该分组的起始位置  在adapter中+上位置信息即可获取item对象
 	private HashMap titleitemposition = new HashMap<String, Integer>();
 
     @Override
