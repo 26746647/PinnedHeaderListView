@@ -1,0 +1,514 @@
+package com.example.adapter;
+
+import java.util.ArrayList;
+
+import com.example.common.DB.DbManager;
+import com.example.expandanimationdemo.ExpandAnimation;
+import com.example.expandanimationdemo.ImageActivity;
+import com.example.expandanimationdemo.R;
+import com.example.service.GoodsItemDbHelper;
+import com.example.service.entity.GoodsItem;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.View.OnTouchListener;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+
+
+public class MyAdapter extends BaseAdapter {
+	Context context;
+    MyHandler myHandler;
+    
+    private static final String TAG="MyAdapter"; 
+    
+    private int mLastMotionX, mLastMotionY;
+
+    private int mCounter;
+    //长按的runnable
+    private Runnable mLongPressRunnable;
+    //移动的阈值
+    private static final int TOUCH_SLOP = 5;
+    
+    private boolean isLongOnclick =false;
+    
+    
+	private ArrayList arraylist= new ArrayList<GoodsItem>();
+
+
+    private int publicPostion;
+    
+	LayoutInflater inflater;
+
+	public MyAdapter(Context context,LayoutInflater inflater1) {
+		this.context = context;		
+		
+		inflater = inflater1;
+		
+	     myHandler = new MyHandler();
+
+	        mLongPressRunnable = new Runnable() {
+
+				@Override
+	            public void run() {
+	                Log.i("sss", "run-ok--");
+	                Message msg = new Message();
+	                msg.what =2000;
+	                msg.arg1= publicPostion;
+	                myHandler.sendMessage(msg);
+	            }
+	        };
+	}
+
+	@Override
+	public int getCount() {
+		return arraylist.size();
+	}
+
+	@Override
+	public Object getItem(int position) {
+		return arraylist.get(position);
+	}
+
+	@Override
+	public long getItemId(int position) {
+		return 0;
+	}
+
+//	@Override
+//	public boolean isEnabled(int position) {
+//		if (nData[position].length() == 1)// �������ĸ����
+//			return false;// ��ʾ���ܵ��
+//		return super.isEnabled(position);
+//	}
+
+	int key =0;
+	
+	@Override
+	public View getView(final int position, View convertView, ViewGroup parent) {
+
+		if (convertView == null) {
+			convertView = inflater.inflate(R.layout.read_buy_list_item,
+					null);
+		}
+		
+//		TextView txv= (TextView) convertView.findViewById(R.id.alpha);
+		
+//		if( selector.get( str[key]) == position)
+//		{
+//			txv.setVisibility(View.VISIBLE);
+//			txv.setText(str[key]);
+//			key++;
+//		}
+//		else
+//		{
+//			txv.setVisibility(View.GONE);
+//		}
+//		
+		
+		
+		
+		convertView.setOnTouchListener(new OnTouchListener(){ 
+			 float oldX = 0;
+	         float oldY = 0;
+		 @Override  
+         public boolean onTouch(View v, MotionEvent event) {  
+             switch(event.getAction())//根据动作来执行代码     
+             {    
+             case MotionEvent.ACTION_MOVE://滑动     
+            	 //TODO
+                 float newX = event.getX();
+                 float newY = event.getY();
+                 
+                 Log.i(TAG, "Math.abs(newX-oldX) ----------------"+Math.abs(newX-oldX) );
+                 Log.i(TAG, "Math.abs(newY-oldY)-----------------"+Math.abs(newY-oldY));
+            	 if(Math.abs(newX-oldX) > TOUCH_SLOP 
+                         || Math.abs(newY-oldY) > TOUCH_SLOP) {
+                     //移动超过阈值，则表示移动了
+            		 Log.i(TAG, "ACTION_MOVE1111111111111-----------------");
+                     myHandler.removeCallbacks(mLongPressRunnable);
+                 }
+
+
+            	 Log.i(TAG, "ACTION_MOVE-----------------");
+                 break;    
+             case MotionEvent.ACTION_DOWN://按下     
+            	 isLongOnclick = false;
+            	 Log.i(TAG, "ACTION_DOWN-----------------");
+//            	 mLongPressRunnable.
+            	 publicPostion =position;
+            	 myHandler.postDelayed(mLongPressRunnable,1500);  
+//            	 v.setBackgroundResource(R.drawable.mm_listitem_pressed); 
+                 oldX = event.getX();
+                 oldY = event.getY();
+                 break;
+             case MotionEvent.ACTION_UP://松开     
+            	 Log.i(TAG, "ACTION_UP-----------------");
+            	 
+            	 
+            	 if(isLongOnclick)
+            	 {
+            		 return false;
+            	 }
+//            	 v.setBackgroundResource(R.drawable.mm_listitem_simple);  
+                 float newX1 = event.getX();
+                 float newY1 = event.getY();
+                 //é€šè¿‡ListViewä¸­çš„pointToPositionæ–¹æ³•èŽ·å–ç‚¹å‡»ListViewä¸­çš„ä½ç½®position
+//                 final int oldPosition = list.pointToPosition((int)oldX, (int)oldY);
+//                 int newPosition = list.pointToPosition((int)newX, (int)newY);
+                 myHandler.removeCallbacks(mLongPressRunnable);
+
+                 if( newX1 - oldX > 20  && newY1 -oldY<10) {      
+                	 
+                	Log.i(TAG, "ACTION_UP---------newX - oldX > 20  && newY -oldY<10--------");
+                 	if(position<0)
+                 	{
+                 		Log.i(TAG, "ACTION_UP---------position<0--------");
+                 		return false;
+                 	}
+                 	
+                 	
+                 	
+                 	
+                 }
+                 else if( (newX1 - oldX <=5) && (newY1-oldY<=5))
+                 {
+                	 Log.i(TAG, "ACTION_UP--------这里是点击事件------");
+                	 //这里是点击事件
+     				View toolbar = v.findViewById(R.id.toolbar);
+
+    				// Creating the expand animation for the item
+    				ExpandAnimation expandAni = new ExpandAnimation(toolbar, 500);
+
+    				// Start the animation on the toolbar
+    				toolbar.startAnimation(expandAni);
+                 }
+                 break;    
+             default: 
+//            	 v.setBackgroundResource(R.drawable.mm_listitem_simple);  
+             }    
+             return true;   
+         }  
+     });  
+		
+		
+		GoodsItem goodsitem = (GoodsItem) arraylist.get(position);
+//		TextView tv = (TextView) convertView.findViewById(R.id.textViewsort);
+//
+//		tv.setText(item);
+		
+		
+		((TextView) convertView.findViewById(R.id.title)).setText(goodsitem.getTitle());
+		((TextView) convertView.findViewById(R.id.num)).setText(String.valueOf(goodsitem.getNumber()));
+
+		Button buybutton= (Button) convertView.findViewById(R.id.buybutton);
+		
+		buybutton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				
+				
+				
+				showAlertDialog(position);
+				
+
+				
+			}
+		});
+		
+		
+		
+		
+		// Resets the toolbar to be closed
+		View toolbar = convertView.findViewById(R.id.toolbar);
+		((LinearLayout.LayoutParams) toolbar.getLayoutParams()).bottomMargin = -50;
+		toolbar.setVisibility(View.GONE);
+		
+		String imagepath= goodsitem.getImagepath();
+		
+//		if(position%2 ==0)
+//		{
+//			convertView.setBackgroundResource(R.drawable.itembg2);
+//			toolbar.setBackgroundResource(R.drawable.item2);
+//			
+//		}
+//		else
+//		{
+//			convertView.setBackgroundResource(R.drawable.itembg1);
+//			toolbar.setBackgroundResource(R.drawable.item1);
+//		}
+		
+		
+		
+		ImageView  img1= (ImageView) convertView.findViewById(R.id.imageView1);
+		ImageView  img2= (ImageView) convertView.findViewById(R.id.imageView2);
+		
+		
+		
+		
+		
+		
+		try
+		{
+			if(!imagepath.equals(""))
+			{
+				final String[] stringsrc= imagepath.split(";");
+				
+				if(stringsrc.length>0)
+				{
+				
+					if(stringsrc[0]!=null && !stringsrc[0].equals(""))
+					{
+						
+						Bitmap myBitmap = BitmapFactory.decodeFile(stringsrc[0],null);
+						
+						img1.setImageBitmap(myBitmap);
+						
+						img1.setOnClickListener(new View.OnClickListener() {
+
+							@Override
+							public void onClick(View v) {
+								Intent intent = new Intent();
+
+								intent.setClass(context, ImageActivity.class);
+
+								intent.putExtra("str", stringsrc[0]);
+
+								context.startActivity(intent);//无返回值的调用,启动一个明确的activity
+							}
+							});
+							
+					}
+					
+					if(stringsrc.length>1 && stringsrc[1]!=null && !stringsrc[1].equals(""))
+					{
+					
+					Bitmap myBitmap2 = BitmapFactory.decodeFile(stringsrc[1],null); ; 
+					
+					img2.setImageBitmap(myBitmap2);
+					
+					
+					img2.setOnClickListener(new View.OnClickListener() {
+
+						@Override
+						public void onClick(View v) {
+							Intent intent = new Intent();
+
+							intent.setClass(context, ImageActivity.class);
+
+							intent.putExtra("str", stringsrc[1]);
+
+							context.startActivity(intent);//无返回值的调用,启动一个明确的activity
+						}
+					});	
+				
+					}
+					
+				}
+
+			}
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+        //将字节数组转换为ImageView可调用的Bitmap对象 
+		
+
+		
+		
+//		((TextView) convertView.findViewById(R.id.textView1))
+//		.setText(goodsitem.getTitle());
+		
+		((TextView) convertView.findViewById(R.id.category))
+		.setText(String.valueOf(goodsitem.getCategory()));
+		
+		((TextView) convertView.findViewById(R.id.Evaluation))
+		.setText(String.valueOf(goodsitem.getEvaluation()));
+
+		((TextView) convertView.findViewById(R.id.des))
+		.setText(goodsitem.getDesc());
+		
+		return convertView;
+	}
+	
+	
+	
+	private void showAlertDialog(final int postion)
+	{
+		 AlertDialog.Builder builder = new AlertDialog.Builder(context);
+         builder.setIcon(R.drawable.ic_launcher);
+         builder.setTitle("请输入购买的价格和数量");
+         
+         GoodsItem goods= (GoodsItem) arraylist.get(postion);
+         final String id = goods.getId();
+         
+         //    通过LayoutInflater来加载一个xml的布局文件作为一个View对象
+         View view = LayoutInflater.from(context).inflate(R.layout.dialog, null);
+         //    设置我们自己定义的布局文件作为弹出框的Content
+         builder.setView(view);
+         
+         final EditText goodsnum = (EditText)view.findViewById(R.id.number);
+         final EditText goodsprice = (EditText)view.findViewById(R.id.pirce);
+         
+         goodsnum.setText(String.valueOf(goods.getNumber()));
+         goodsprice.setText(String.valueOf(goods.getEvaluation()));
+
+         builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
+         {
+             @Override
+             public void onClick(DialogInterface dialog, int which)
+             {
+                 String a = goodsnum.getText().toString().trim();
+                 String b = goodsprice.getText().toString().trim();
+                 //    将输入的用户名和密码打印出来
+
+
+                 insert_buy_goods(postion,Integer.valueOf(a),Integer.valueOf(b));
+                 
+                 remove_goods_byid(id);
+              	 update_totle();
+                 arraylist.remove(postion);
+                 notifyDataSetChanged();
+             } 
+         });
+         builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
+         {
+             @Override
+             public void onClick(DialogInterface dialog, int which)
+             {
+                 
+             }
+         });
+         builder.show();
+
+	}
+	
+	
+	private void update_totle()
+	{
+//		tv_totle.setText(String.valueOf(arraylist.size()));
+	}
+	
+	private void remove_goods_byid(String id)
+	{
+		DbManager dbmanager = new DbManager(context, DbManager.DB_NAME, null, 1);
+		SQLiteDatabase db = dbmanager.getWritableDatabase();
+		GoodsItemDbHelper.removeRecord(db, id);
+		db.close();
+	}
+	
+	
+	/****
+	 * 添加已购买商品
+	 * @param postion
+	 */
+	
+	public void insert_buy_goods(int postion,int number, int price)
+	{
+		GoodsItem  goods =(GoodsItem) arraylist.get(postion);
+		
+		DbManager dbmanager = new DbManager(context, DbManager.DB_NAME, null, 1);
+		SQLiteDatabase db = dbmanager.getWritableDatabase();
+		GoodsItemDbHelper.insert_Storag_goods_table(db, goods.getTitle(), number, price, goods.getCategory(), goods.getImagepath(), goods.getDesc());
+		db.close();
+		
+		
+	}
+	
+	
+	
+	 /**
+     * 接受消息,处理消息 ,此Handler会与当前主线程一块运行
+     * */
+
+     class MyHandler extends Handler {
+         public MyHandler() {
+         }
+
+         public MyHandler(Looper L) {
+             super(L);
+         }
+
+         // 子类必须重写此方法,接受数据
+         @Override
+         public void handleMessage(Message msg) {
+             // TODO Auto-generated method stub
+             Log.d("MyHandler", "handleMessage......");
+             super.handleMessage(msg);
+             // 此处可以更新UI
+             if(msg.what ==2000)
+             {
+                 
+                 final int ppp= msg.arg1;
+                 
+                 isLongOnclick = true;
+                 Dialog alertDialog = new AlertDialog.Builder(context).setTitle("确定删除？").   
+                		                setMessage("您确定删除该条信息吗？").   
+                		                setIcon(R.drawable.ic_launcher).   
+                		                 setPositiveButton("确定", new DialogInterface.OnClickListener() {   
+                		                        
+                		                     @Override   
+                		                     public void onClick(DialogInterface dialog, int which) {   
+                		                         // TODO Auto-generated method stub    
+                		                    	 
+                		                         GoodsItem goods= (GoodsItem) arraylist.get(ppp);
+                		                         final String id = goods.getId();
+                		                    	 remove_goods_byid(id);
+                		                      	 arraylist.remove(ppp);
+                		                      	 update_totle();
+                		                         notifyDataSetChanged();
+                		                     }   
+                		                 }).   
+                		                 setNegativeButton("取消", new DialogInterface.OnClickListener() {   
+                		                        
+                		                     @Override   
+                		                     public void onClick(DialogInterface dialog, int which) {   
+                		                         // TODO Auto-generated method stub    
+                		                     }   
+                		                 }).create();   
+                		         alertDialog.show();   
+
+                 
+                 
+             }
+
+
+         }
+     }
+
+
+
+	public ArrayList getArraylist() {
+		return arraylist;
+	}
+
+	public void setArraylist(ArrayList arraylist) {
+		this.arraylist = arraylist;
+	}
+	
+	
+	
+	
+}
