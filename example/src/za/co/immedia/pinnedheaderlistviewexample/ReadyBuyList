@@ -1,0 +1,345 @@
+package com.example.expandanimationdemo;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+
+
+import com.example.adapter.MyAdapter;
+import com.example.common.CommonFragment;
+import com.example.common.DB.DbManager;
+import com.example.service.GoodsItemDbHelper;
+import com.example.service.entity.GoodsItem;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.View.OnTouchListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.Animation.AnimationListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.LinearLayout.LayoutParams;
+
+@SuppressLint("ValidFragment")
+public class ReadyBuyList extends CommonFragment{
+	
+	
+	private ArrayList<String> array; 
+    private ArrayAdapter<String> listAdapter; 
+    LinearLayout layoutIndex;
+    private HashMap<String, Integer> selector;
+    
+	private String[] str ;
+//	private String data[] = { "分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3","分组1", "分组2", "分组3" };
+	
+	
+	private ArrayList arraylist= new ArrayList<GoodsItem>();
+//	String nData[];//排序后的数组
+	MyAdapter adapter;
+    
+	private TextView tv_show,tv_totle;
+	
+	int height;
+	private ListView list;
+	
+	private static final String TAG="ExpandAnimationDemo"; 
+	
+	private Context context;
+	private LayoutInflater inflater;
+//	private Log log = Log.get
+	
+
+	
+	public ReadyBuyList(Context context)
+	{
+		this.context  =context;
+	}
+	
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		this.inflater =inflater;
+		View rootView = inflater.inflate(R.layout.readbuylist,
+				container, false);
+		initView(savedInstanceState,rootView);
+		
+		return rootView;
+	}
+
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+	}
+	
+	
+	public void onResume() {
+		super.onResume();
+//		getIndexView();
+	}
+
+
+	
+	protected void initView(Bundle savedInstanceState,View rootView) {
+		
+
+
+
+		
+		layoutIndex = (LinearLayout) rootView.findViewById(R.id.layout);
+		layoutIndex.setBackgroundColor(Color.parseColor("#00ffffff"));
+		// height =
+		// this.getWindowManager().getDefaultDisplay().getHeight()//��ȡ��Ļ�ĸ߶�Ȼ�����������ĸ�ĳ���
+		// / str.length;
+		
+		initdata();
+	
+		tv_totle =((TextView) rootView.findViewById(R.id.textViewtotle));
+		tv_totle.setText(String.valueOf(arraylist.size()));
+		
+//		sortIndex();
+		ImageView  imgadd= (ImageView) rootView.findViewById(R.id.imageadd);
+		
+		imgadd.setOnClickListener(new View.OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			Intent intent = new Intent();
+
+			intent.setClass(context, Newitem.class);
+
+			intent.putExtra("str", "come from first activity");
+
+			startActivity(intent);//无返回值的调用,启动一个明确的activity
+//			close();
+		}
+		});
+		
+		list = (ListView) rootView.findViewById(R.id.udiniList);
+
+		
+		adapter = new MyAdapter(context,inflater);
+		adapter.setArraylist(arraylist);
+		list.setAdapter(adapter);
+		
+
+	}
+	
+
+//	public void onResume()
+//	{
+//
+//		adapter.notifyDataSetChanged();
+//		super.onResume();
+//	}
+	
+//	private void close()
+//	{
+//		this.finish();
+//	}
+//	
+
+	
+	//初始化数据
+	public void initdata()
+	{
+		
+		str =getResources().getStringArray(R.array.Classes_array);
+		selector = new HashMap<String, Integer>();
+		DbManager dbmanager = new DbManager(context, DbManager.DB_NAME, null, 1);
+		SQLiteDatabase db = dbmanager.getWritableDatabase();
+		Cursor cursor = null;
+		int j=0;
+		for (int i = 0; i < str.length; i++) {
+			String[] selectionArgs={str[i]};
+			cursor = db.query(dbmanager.GOODS_TABLE_NAME, null,"category =?", selectionArgs, null, null, null);
+			selector.put(str[i],j);
+			while(cursor.moveToNext())
+			{
+				GoodsItem goodsitem = new GoodsItem();
+				goodsitem.setId(cursor.getString(cursor.getColumnIndex("id")) );
+				goodsitem.setTitle( cursor.getString(cursor.getColumnIndex("title")) );
+				goodsitem.setCategory(cursor.getString(cursor.getColumnIndex("category")));
+				
+				goodsitem.setEvaluation(cursor.getInt(cursor.getColumnIndex("evaluation")));
+				goodsitem.setNumber(cursor.getInt(cursor.getColumnIndex("number")));
+				goodsitem.setImagepath(cursor.getString(cursor.getColumnIndex("imagepath")));
+				goodsitem.setCreatedatetime(cursor.getString(cursor.getColumnIndex("createdatetime")));
+				goodsitem.setDesc(cursor.getString(cursor.getColumnIndex("desc")));
+				
+				arraylist.add(goodsitem);
+				j++;
+			}
+			
+		}
+
+		cursor.close();
+		db.close();
+	}
+	
+	
+	
+	
+//	
+//	public void onWindowFocusChanged(boolean hasFocus) {
+//		// ��oncreate����ִ������Ĵ���û��Ӧ����Ϊoncreate����õ���getHeight=0
+//		System.out
+//				.println("layoutIndex.getHeight()=" + layoutIndex.getHeight());
+//		height = layoutIndex.getHeight() / str.length;
+//		getIndexView();
+//	}
+//	
+//	public void getIndexView() {
+//		LinearLayout.LayoutParams params = new LayoutParams(
+//				LayoutParams.WRAP_CONTENT, height);
+//		// params.setMargins(10, 5, 10, 0);
+//		for (int i = 0; i < str.length; i++) {
+//			final TextView tv = new TextView(context);
+//			tv.setLayoutParams(params);
+//			tv.setText(str[i]);
+//			// tv.setTextColor(Color.parseColor("#606060"));
+//			// tv.setTextSize(16);
+//			tv.setPadding(10, 0, 10, 0);
+//			//tv.setTextColor(this.getResources().getColor(R.color.huise));
+//			layoutIndex.addView(tv);
+//			layoutIndex.setOnTouchListener(new OnTouchListener() {
+//
+//				@Override
+//				public boolean onTouch(View v, MotionEvent event)
+//
+//				{
+//					float y = event.getY();
+//					int index = (int) (y / height);
+//					if (index > -1 && index < str.length) {// ��ֹԽ��
+//						String key = str[index];
+//						if (selector.containsKey(key)) {
+//							int pos = selector.get(key);
+//							if (list.getHeaderViewsCount() > 0) {// ��ֹListView�б�������������û�С�
+//								list.setSelectionFromTop(
+//										pos + list.getHeaderViewsCount(), 0);
+//							} else {
+//								list.setSelectionFromTop(pos, 0);// ��������һ��
+//							}
+//							tv_show.setVisibility(View.VISIBLE);
+//							tv_show.setText(str[index]);
+//						}
+//					}
+//					switch (event.getAction()) {
+//					case MotionEvent.ACTION_DOWN:
+//						layoutIndex.setBackgroundColor(Color
+//								.parseColor("#606060"));
+//						break;
+//
+//					case MotionEvent.ACTION_MOVE:
+//
+//						break;
+//					case MotionEvent.ACTION_UP:
+//						layoutIndex.setBackgroundColor(Color
+//								.parseColor("#00ffffff"));
+//						tv_show.setVisibility(View.INVISIBLE);
+//						break;
+//					}
+//					return true;
+//				}
+//			});
+//		}
+//	}
+	
+	
+
+	
+
+	
+
+	
+	 /**
+     * 删除item，并播放动画
+     * @param rowView 播放动画的view
+     * @param positon 要删除的item位置
+     */ 
+    protected void removeListItem(View rowView, final int positon) { 
+         
+        final Animation animation = (Animation) AnimationUtils.loadAnimation(rowView.getContext(), R.layout.item_anim); 
+        animation.setAnimationListener(new AnimationListener() { 
+            public void onAnimationStart(Animation animation) {} 
+ 
+            public void onAnimationRepeat(Animation animation) {} 
+ 
+            public void onAnimationEnd(Animation animation) { 
+                array.remove(positon); 
+                listAdapter.notifyDataSetChanged(); 
+                animation.cancel(); 
+            } 
+        }); 
+         
+ 
+        rowView.startAnimation(animation); 
+ 
+    } 
+	
+	
+	
+	
+//	@Override
+//	public boolean onCreateOptionsMenu(Menu menu) {
+//		// Inflate the menu; this adds items to the action bar if it is present.
+//		getMenuInflater().inflate(R.menu.main_menu, menu);
+//		return true;
+//	}
+//	
+	
+//	@Override
+//	public boolean onOptionsItemSelected(MenuItem item) {
+//		// TODO Auto-generated method stub
+//		
+//		switch (item.getItemId()) {
+//		case R.id.action_about:
+//			Intent intent = new Intent();
+//
+//			intent.setClass(ExpandAnimationDemo.this, AboutActivity.class);
+//
+//			startActivity(intent);
+//		return true;
+//		default:
+//		
+//		//返回False交由系统正常处理菜单，返回True则由本程序处理
+//		return false;
+//		 }
+//
+//	}
+	
+
+
+}
